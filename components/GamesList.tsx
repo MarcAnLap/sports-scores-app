@@ -1,3 +1,4 @@
+// components/GamesList.tsx
 import LiveUpdater from "./LiveUpdater";
 
 async function getGames() {
