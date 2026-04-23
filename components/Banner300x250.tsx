@@ -71,7 +71,7 @@ export default function Banner300x250({
       if (container && scriptRef.current) {
         try {
           container.removeChild(scriptRef.current);
-        } catch (e) {
+        } catch {
           // Ignorer l'erreur si le script n'existe plus
         }
         scriptRef.current = null;
