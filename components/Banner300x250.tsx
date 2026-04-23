@@ -22,7 +22,8 @@ type AdBannerProps = {
   className?: string;
 };
 
-const ADSTERRA_KEY = 'cf698724bf9b3eb306509c04b96158eb';
+// const ADSTERRA_KEY = 'cf698724bf9b3eb306509c04b96158eb';
+const ADSTERRA_KEY = process.env.NEXT_PUBLIC_ADSTERRA_KEY || '';
 
 export default function AdBanner({ 
   id, 
