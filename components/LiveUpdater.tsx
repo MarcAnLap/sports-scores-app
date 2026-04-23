@@ -505,6 +505,7 @@
 
 import { useEffect, useState } from "react";
 import moment from 'moment-timezone';
+import Banner300x250 from "./Banner300x250";
 
 type Game = {
   id: number;
@@ -771,6 +772,14 @@ export default function LiveUpdater({ initialGames }: { initialGames: Game[] }) 
           <p className="text-gray-400">Aucun match programmé pour le moment</p>
         </div>
       )}
+
+      <Banner300x250
+          id="ad-bottom"
+          width={300}
+          height={250}
+          format="iframe"
+          className="my-4"
+        />
     </div>
   );
 }
