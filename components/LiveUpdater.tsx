@@ -592,7 +592,7 @@ export default function LiveUpdater({ initialGames }: { initialGames: Game[] }) 
   };
 
   useEffect(() => {
-    const interval = setInterval(fetchLive, 60000);
+    const interval = setInterval(fetchLive, 40000);
     return () => clearInterval(interval);
   }, []);
 
