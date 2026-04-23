@@ -1,3 +1,4 @@
+// Banner publicitaire 300x250 pour Adsterra
 'use client';
 
 import { useEffect, useRef } from 'react';
@@ -25,7 +26,7 @@ type AdBannerProps = {
 // const ADSTERRA_KEY = 'cf698724bf9b3eb306509c04b96158eb';
 const ADSTERRA_KEY = process.env.NEXT_PUBLIC_ADSTERRA_KEY || '';
 
-export default function AdBanner({ 
+export default function Banner300x250({ 
   id, 
   width = 300, 
   height = 250, 
