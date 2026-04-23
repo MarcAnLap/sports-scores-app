@@ -1,4 +1,4 @@
-// Banner publicitaire 300x250 pour Adsterra
+// components/Banner300x250.tsx - Version ultra robuste
 'use client';
 
 import { useEffect, useRef } from 'react';
@@ -23,8 +23,7 @@ type AdBannerProps = {
   className?: string;
 };
 
-// const ADSTERRA_KEY = 'cf698724bf9b3eb306509c04b96158eb';
-const ADSTERRA_KEY = process.env.NEXT_PUBLIC_ADSTERRA_KEY || '';
+const ADSTERRA_KEY = 'cf698724bf9b3eb306509c04b96158eb';
 
 export default function Banner300x250({ 
   id, 
@@ -34,11 +33,19 @@ export default function Banner300x250({
   className = ''
 }: AdBannerProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const scriptLoaded = useRef(false);
+  const scriptRef = useRef<HTMLScriptElement | null>(null);
 
   useEffect(() => {
-    // Éviter les chargements multiples
-    if (scriptLoaded.current || !containerRef.current) return;
+    const container = containerRef.current;
+    
+    if (!container) return;
+    
+    // Nettoyer le conteneur avant d'ajouter un nouveau script
+    if (scriptRef.current) {
+      container.removeChild(scriptRef.current);
+    }
+    
+    container.innerHTML = '';
     
     // Configuration Adsterra
     window.atOptions = {
@@ -49,22 +56,25 @@ export default function Banner300x250({
       params: {},
     };
 
-    // Injection du script
+    // Création du script
     const script = document.createElement('script');
     script.type = 'text/javascript';
     script.src = `https://www.highperformanceformat.com/${ADSTERRA_KEY}/invoke.js`;
     script.async = true;
     script.defer = true;
     
-    const container = containerRef.current;
     container.appendChild(script);
-    scriptLoaded.current = true;
+    scriptRef.current = script;
 
     // Cleanup
     return () => {
-      if (container && scriptLoaded.current) {
-        container.innerHTML = '';
-        scriptLoaded.current = false;
+      if (container && scriptRef.current) {
+        try {
+          container.removeChild(scriptRef.current);
+        } catch (e) {
+          // Ignorer l'erreur si le script n'existe plus
+        }
+        scriptRef.current = null;
       }
     };
   }, [width, height, format]);
