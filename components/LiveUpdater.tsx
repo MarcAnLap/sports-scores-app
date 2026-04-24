@@ -320,7 +320,7 @@ const teamColors: Record<
   TOR: { primary: "#00205B", secondary: "#FFFFFF", text: "white" },
   BOS: { primary: "#FFB81C", secondary: "#000000", text: "black" },
   OTT: { primary: "#E31837", secondary: "#C69214", text: "white" },
-  TB: { primary: "#00205B", secondary: "#FFFFFF", text: "white" },
+  TBL: { primary: "#00205B", secondary: "#FFFFFF", text: "white" },
   FLA: { primary: "#C8102E", secondary: "#041E42", text: "white" },
   DET: { primary: "#CE1126", secondary: "#FFFFFF", text: "white" },
   BUF: { primary: "#002654", secondary: "#FFB81C", text: "white" },
