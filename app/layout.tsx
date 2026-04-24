@@ -25,9 +25,23 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} h-full  bg-black antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full bg-black flex flex-col">{children}</body>
     </html>
   );
 }
+
+// export default function RootLayout({
+//   children,
+// }: {
+//   children: React.ReactNode;
+// }) {
+//   return (
+//     <html lang="fr" className="bg-black">
+//       <body className="min-h-screen bg-black text-white antialiased">
+//         {children}
+//       </body>
+//     </html>
+//   );
+// }

@@ -294,6 +294,7 @@ type GameState = "LIVE" | "FINAL" | "FUT" | "PRE" | "OFF" | "CRIT";
 
 type Game = {
   id: number;
+  gameType?: number; // 2 = saison régulière, 3 = séries
   gameState: GameState;
   startTimeUTC?: string;
   period?: number;
@@ -408,8 +409,62 @@ function sortByStartTimeDesc(a: Game, b: Game): number {
   return bTime - aTime;
 }
 
+// function getGameStatus(game: Game) {
+//   if (ACTIVE_LIVE_STATES.includes(game.gameState)) {
+//     return { label: "EN DIRECT", color: "text-red-500", icon: "🔴" };
+//   }
+
+//   if (FINISHED_STATES.includes(game.gameState)) {
+//     return { label: "TERMINÉ", color: "text-gray-400", icon: "🏁" };
+//   }
+
+//   if (UPCOMING_STATES.includes(game.gameState)) {
+//     return { label: "À VENIR", color: "text-blue-400", icon: "⏰" };
+//   }
+
+//   return { label: game.gameState, color: "text-gray-500", icon: "⏸" };
+// }
+
+// function getPeriodLabel(game: Game): string | null {
+//   if (!ACTIVE_LIVE_STATES.includes(game.gameState)) return null;
+
+//   const timeRemaining = game.clock?.timeRemaining?.trim() ?? "";
+//   const period = game.period ?? 0;
+
+//   if (!timeRemaining) {
+//     return period > 0 ? `Période ${period}` : "En cours";
+//   }
+
+//   if (timeRemaining === "00:00") {
+//     return period > 0 ? `Fin de la période ${period}` : "Fin de période";
+//   }
+
+//   return `Période ${period}`;
+// }
+
+// function getClockDisplay(game: Game): string | null {
+//   if (!ACTIVE_LIVE_STATES.includes(game.gameState)) return null;
+
+//   const timeRemaining = game.clock?.timeRemaining?.trim() ?? "";
+//   if (!timeRemaining) return null;
+//   if (timeRemaining === "00:00") return "Pause / entracte";
+
+//   return timeRemaining;
+// }
+
 function getGameStatus(game: Game) {
+  const period = game.period ?? 0;
+  const isPlayoff = game.gameType === 3;
+
   if (ACTIVE_LIVE_STATES.includes(game.gameState)) {
+    if (period >= 4) {
+      return {
+        label: isPlayoff ? `PROLONGATION ${period - 3}` : "PROLONGATION",
+        color: "text-yellow-400",
+        icon: "⚡",
+      };
+    }
+
     return { label: "EN DIRECT", color: "text-red-500", icon: "🔴" };
   }
 
@@ -427,212 +482,51 @@ function getGameStatus(game: Game) {
 function getPeriodLabel(game: Game): string | null {
   if (!ACTIVE_LIVE_STATES.includes(game.gameState)) return null;
 
-  const timeRemaining = game.clock?.timeRemaining?.trim() ?? "";
   const period = game.period ?? 0;
+  const timeRemaining = game.clock?.timeRemaining?.trim() ?? "";
+  const isPlayoff = game.gameType === 3;
 
-  if (!timeRemaining) {
-    return period > 0 ? `Période ${period}` : "En cours";
+  if (period <= 3) {
+    if (timeRemaining === "00:00") {
+      return `Fin de la période ${period}`;
+    }
+
+    return `Période ${period}`;
   }
 
-  if (timeRemaining === "00:00") {
-    return period > 0 ? `Fin de la période ${period}` : "Fin de période";
+  if (isPlayoff) {
+    if (timeRemaining === "00:00") {
+      return `Fin prolongation ${period - 3}`;
+    }
+
+    return `Prolongation ${period - 3}`;
   }
 
-  return `Période ${period}`;
+  if (period === 4) {
+    if (timeRemaining === "00:00") return "Fin de la prolongation";
+    return "Prolongation";
+  }
+
+  return "Tirs de barrage";
 }
 
 function getClockDisplay(game: Game): string | null {
   if (!ACTIVE_LIVE_STATES.includes(game.gameState)) return null;
 
+  const period = game.period ?? 0;
   const timeRemaining = game.clock?.timeRemaining?.trim() ?? "";
-  if (!timeRemaining) return null;
-  if (timeRemaining === "00:00") return "Pause / entracte";
+
+  if (!timeRemaining) return "En cours";
+
+  if (timeRemaining === "00:00") {
+    if (period >= 4) return "Pause OT";
+    return "Pause / entracte";
+  }
 
   return timeRemaining;
 }
 
 //section title plus stylé et varianté
-function SectionTitle({
-  title,
-  count,
-  icon,
-  variant = "default",
-  games,
-}: {
-  title: string;
-  count: number;
-  icon: string;
-  variant?: "live" | "upcoming" | "recent" | "default";
-  games?: Game[];
-}) {
-  const [timeUntilFirstGame, setTimeUntilFirstGame] = useState<string | null>(null);
-
-  const styles = {
-    live: {
-      border: "border-red-500/30",
-      bg: "bg-red-500/10",
-      text: "text-red-400",
-      line: "from-red-500/70",
-      glow: "shadow-red-500/20",
-      badge: "bg-red-500",
-    },
-    upcoming: {
-      border: "border-blue-500/30",
-      bg: "bg-blue-500/10",
-      text: "text-blue-400",
-      line: "from-blue-500/70",
-      glow: "shadow-blue-500/20",
-      badge: "bg-blue-500",
-    },
-    recent: {
-      border: "border-emerald-500/30",
-      bg: "bg-emerald-500/10",
-      text: "text-emerald-400",
-      line: "from-emerald-500/70",
-      glow: "shadow-emerald-500/20",
-      badge: "bg-emerald-500",
-    },
-    default: {
-      border: "border-gray-700",
-      bg: "bg-gray-800/60",
-      text: "text-white",
-      line: "from-gray-500/70",
-      glow: "",
-      badge: "bg-gray-500",
-    },
-  }[variant];
-
-  // Fonction pour calculer le temps restant dynamiquement
-  const calculateTimeUntilFirstGame = () => {
-    if (variant !== "upcoming" || !games || games.length === 0) {
-      return null;
-    }
-
-    const firstGame = games[0];
-    const gameTime = firstGame.startTimeUTC
-      ? moment(firstGame.startTimeUTC).tz("America/Toronto")
-      : null;
-
-    if (!gameTime) return null;
-
-    const now = moment().tz("America/Toronto");
-    const diffSeconds = gameTime.diff(now, 'seconds');
-
-    if (diffSeconds <= 0) return "Commencé";
-
-    const hours = Math.floor(diffSeconds / 3600);
-    const minutes = Math.floor((diffSeconds % 3600) / 60);
-    const seconds = diffSeconds % 60;
-
-    if (hours > 0) {
-      // return `${hours}h ${minutes}min`;
-      return `${hours}h`;
-    } else if (minutes > 0) {
-      return `${minutes}min ${seconds}s`;
-    } else {
-      return `${seconds}s`;
-    }
-  };
-
-  // Mise à jour du timer dynamique - CORRIGÉ (utilisation de setTimeout)
-  useEffect(() => {
-    if (variant !== "upcoming") return;
-
-    // Utiliser setTimeout pour éviter l'appel setState synchrone
-    const timer = setTimeout(() => {
-      setTimeUntilFirstGame(calculateTimeUntilFirstGame());
-    }, 0);
-
-    // Mise à jour chaque seconde
-    const interval = setInterval(() => {
-      setTimeUntilFirstGame(calculateTimeUntilFirstGame());
-    }, 1000);
-
-    return () => {
-      clearTimeout(timer);
-      clearInterval(interval);
-    };
-  }, [variant, games]);
-
-  const showTimer = variant === "upcoming" && timeUntilFirstGame && timeUntilFirstGame !== "Commencé";
-
-  return (
-    <div className="mt-4 mb-6">
-      <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-        {/* Badge principal avec effet glassmorphisme */}
-        <div
-          className={`relative flex items-center gap-3 rounded-2xl border ${styles.border} ${styles.bg} px-5 py-3.5 shadow-xl ${styles.glow} backdrop-blur-sm overflow-hidden group`}
-        >
-          {/* Animation de fond au hover */}
-          <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/5 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
-          
-          {/* Icône animée */}
-          <div className={`text-3xl transform transition-transform group-hover:scale-110 group-hover:rotate-12 duration-300`}>
-            {icon}
-          </div>
-
-          <div>
-            <h2 className={`text-2xl md:text-3xl font-black tracking-tight ${styles.text}`}>
-              {title}
-            </h2>
-            <div className="flex items-center gap-2 mt-0.5">
-              <div className={`w-2 h-2 rounded-full ${styles.badge} animate-pulse`} />
-              <p className="text-sm font-medium text-gray-300">
-                {count} match{count > 1 ? "s" : ""} au programme
-              </p>
-            </div>
-          </div>
-
-          {/* Timer dynamique pour upcoming */}
-          {showTimer && (
-            <div className="ml-2 block">
-              <div className="flex items-center gap-1.5 bg-black/30 rounded-full px-3 py-1.5">
-                <span className="text-yellow-400 text-sm animate-pulse">⚡</span>
-                <span className="text-xs font-mono font-bold text-yellow-400">
-                  dans moins de {timeUntilFirstGame}
-                </span>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Ligne décorative avec étoiles */}
-        <div className={`hidden sm:flex items-center gap-2 flex-1`}>
-          <div className={`h-px flex-1 bg-gradient-to-r ${styles.line} to-transparent`} />
-          <div className="flex gap-1">
-            {[...Array(3)].map((_, i) => (
-              <div
-                key={i}
-                className={`w-1 h-1 rounded-full ${styles.text.replace('text-', 'bg-')} opacity-40`}
-              />
-            ))}
-          </div>
-        </div>
-
-        {/* Call to action pour upcoming */}
-        {variant === "upcoming" && count > 0 && (
-          <div className="hidden lg:block">
-            <div className="flex items-center gap-2 text-xs text-gray-400 bg-gray-800/30 rounded-full px-3 py-1.5">
-              <span>🔔</span>
-              <span>Ne ratez aucun but! 🏒</span>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Sous-titre descriptif pour upcoming */}
-      {variant === "upcoming" && count > 0 && (
-        <div className="mt-3 ml-1">
-          <p className="text-xs text-gray-500 flex items-center gap-2">
-            <span className="w-1 h-1 rounded-full bg-blue-500" />
-            <span>Tous les horaires en HE</span>
-          </p>
-        </div>
-      )}
-    </div>
-  );
-}
-
 // function SectionTitle({
 //   title,
 //   count,
@@ -646,7 +540,7 @@ function SectionTitle({
 //   variant?: "live" | "upcoming" | "recent" | "default";
 //   games?: Game[];
 // }) {
-//   const [firstGameInfo, setFirstGameInfo] = useState<{ time: string; remaining: string; progress: number } | null>(null);
+//   const [timeUntilFirstGame, setTimeUntilFirstGame] = useState<string | null>(null);
 
 //   const styles = {
 //     live: {
@@ -683,8 +577,8 @@ function SectionTitle({
 //     },
 //   }[variant];
 
-//   // Fonction pour calculer les informations du premier match avec progression
-//   const calculateFirstGameInfo = () => {
+//   // Fonction pour calculer le temps restant dynamiquement
+//   const calculateTimeUntilFirstGame = () => {
 //     if (variant !== "upcoming" || !games || games.length === 0) {
 //       return null;
 //     }
@@ -699,43 +593,34 @@ function SectionTitle({
 //     const now = moment().tz("America/Toronto");
 //     const diffSeconds = gameTime.diff(now, 'seconds');
 
-//     if (diffSeconds <= 0) return { time: gameTime.format("HH:mm"), remaining: "Commencé", progress: 100 };
+//     if (diffSeconds <= 0) return "Commencé";
 
 //     const hours = Math.floor(diffSeconds / 3600);
 //     const minutes = Math.floor((diffSeconds % 3600) / 60);
 //     const seconds = diffSeconds % 60;
 
-//     // Calcul de la progression (sur 2 heures avant le match = 7200 secondes)
-//     const totalSecondsBeforeMatch = 7200; // 2 heures en secondes
-//     const elapsedSeconds = Math.max(0, totalSecondsBeforeMatch - diffSeconds);
-//     const progress = Math.min(100, Math.max(0, (elapsedSeconds / totalSecondsBeforeMatch) * 100));
-
-//     let remainingText = "";
 //     if (hours > 0) {
-//       remainingText = `${hours}h ${minutes}min`;
+//       // return `${hours}h ${minutes}min`;
+//       return `${hours}h`;
 //     } else if (minutes > 0) {
-//       remainingText = `${minutes}min ${seconds}s`;
+//       return `${minutes}min ${seconds}s`;
 //     } else {
-//       remainingText = `${seconds}s`;
+//       return `${seconds}s`;
 //     }
-
-//     return {
-//       time: gameTime.format("HH:mm"),
-//       remaining: remainingText,
-//       progress: progress
-//     };
 //   };
 
-//   // Mise à jour du timer dynamique
+//   // Mise à jour du timer dynamique - CORRIGÉ (utilisation de setTimeout)
 //   useEffect(() => {
 //     if (variant !== "upcoming") return;
 
+//     // Utiliser setTimeout pour éviter l'appel setState synchrone
 //     const timer = setTimeout(() => {
-//       setFirstGameInfo(calculateFirstGameInfo());
+//       setTimeUntilFirstGame(calculateTimeUntilFirstGame());
 //     }, 0);
 
+//     // Mise à jour chaque seconde
 //     const interval = setInterval(() => {
-//       setFirstGameInfo(calculateFirstGameInfo());
+//       setTimeUntilFirstGame(calculateTimeUntilFirstGame());
 //     }, 1000);
 
 //     return () => {
@@ -744,9 +629,10 @@ function SectionTitle({
 //     };
 //   }, [variant, games]);
 
+//   const showTimer = variant === "upcoming" && timeUntilFirstGame && timeUntilFirstGame !== "Commencé";
+
 //   return (
-//     <div className="mt-10 mb-6">
-//       {/* Ligne supérieure avec le badge principal */}
+//     <div className="mt-4 mb-6">
 //       <div className="flex flex-col sm:flex-row sm:items-center gap-4">
 //         {/* Badge principal avec effet glassmorphisme */}
 //         <div
@@ -771,6 +657,18 @@ function SectionTitle({
 //               </p>
 //             </div>
 //           </div>
+
+//           {/* Timer dynamique pour upcoming */}
+//           {showTimer && (
+//             <div className="ml-2 block">
+//               <div className="flex items-center gap-1.5 bg-black/30 rounded-full px-3 py-1.5">
+//                 <span className="text-yellow-400 text-sm animate-pulse">⚡</span>
+//                 <span className="text-xs font-mono font-bold text-yellow-400">
+//                   dans moins de {timeUntilFirstGame}
+//                 </span>
+//               </div>
+//             </div>
+//           )}
 //         </div>
 
 //         {/* Ligne décorative avec étoiles */}
@@ -797,55 +695,10 @@ function SectionTitle({
 //         )}
 //       </div>
 
-//       {/* Timer détaillé pour upcoming avec barre de progression */}
-//       {variant === "upcoming" && firstGameInfo && firstGameInfo.remaining !== "Commencé" && (
-//         <div className="mt-4">
-//           {/* Compteur centré */}
-//           <div className="flex justify-center mb-3">
-//             <div className="flex items-center gap-4 bg-black/30 rounded-full px-5 py-2 backdrop-blur-sm">
-//               <div className="flex items-center gap-3">
-//                 <div className="text-center">
-//                   <div className="text-sm text-gray-400 uppercase tracking-wider">Premier match</div>
-//                   <div className="text-2xl font-black text-blue-400 font-mono">
-//                     {firstGameInfo.time}
-//                   </div>
-//                 </div>
-//                 <div className="text-yellow-400 text-2xl animate-pulse">⚡</div>
-//                 <div className="text-center">
-//                   <div className="text-sm text-gray-400 uppercase tracking-wider">Dans</div>
-//                   <div className="text-2xl font-black text-yellow-400 font-mono">
-//                     {firstGameInfo.remaining}
-//                   </div>
-//                 </div>
-//               </div>
-//             </div>
-//           </div>
-
-//           {/* Barre de progression stylisée */}
-//           {/* <div className="mt-2">
-//             <div className="h-1.5 bg-blue-950/50 rounded-full overflow-hidden">
-//               <div 
-//                 className="h-full bg-gradient-to-r from-blue-500 to-blue-400 rounded-full transition-all duration-1000 ease-out relative"
-//                 style={{ width: `${firstGameInfo.progress}%` }}
-//               > */}
-//                 {/* Effet de brillance sur la barre */}
-//                 {/* <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer" />
-//               </div>
-//             </div> */}
-//             {/* Indicateurs de temps sous la barre */}
-//             {/* <div className="flex justify-between mt-1 text-[10px] text-gray-600 px-1">
-//               <span>H-2h</span>
-//               <span>⚡ Premier match</span>
-//               <span>Maintenant</span>
-//             </div>
-//           </div> */}
-//         </div>
-//       )}
-
 //       {/* Sous-titre descriptif pour upcoming */}
 //       {variant === "upcoming" && count > 0 && (
-//         <div className="mt-3">
-//           <p className="text-xs text-gray-500 flex items-center gap-2 justify-center">
+//         <div className="mt-3 ml-1">
+//           <p className="text-xs text-gray-500 flex items-center gap-2">
 //             <span className="w-1 h-1 rounded-full bg-blue-500" />
 //             <span>Tous les horaires en HE</span>
 //           </p>
@@ -854,6 +707,229 @@ function SectionTitle({
 //     </div>
 //   );
 // }
+
+function SectionTitle({
+  title,
+  count,
+  icon,
+  variant = "default",
+  games,
+}: {
+  title: string;
+  count: number;
+  icon: string;
+  variant?: "live" | "upcoming" | "recent" | "default";
+  games?: Game[];
+}) {
+  const [firstGameInfo, setFirstGameInfo] = useState<{ time: string; remaining: string; progress: number } | null>(null);
+
+  const styles = {
+    live: {
+      border: "border-red-500/30",
+      bg: "bg-red-500/10",
+      text: "text-red-400",
+      line: "from-red-500/70",
+      glow: "shadow-red-500/20",
+      badge: "bg-red-500",
+    },
+    upcoming: {
+      border: "border-blue-500/30",
+      bg: "bg-blue-500/10",
+      text: "text-blue-400",
+      line: "from-blue-500/70",
+      glow: "shadow-blue-500/20",
+      badge: "bg-blue-500",
+    },
+    recent: {
+      border: "border-emerald-500/30",
+      bg: "bg-emerald-500/10",
+      text: "text-emerald-400",
+      line: "from-emerald-500/70",
+      glow: "shadow-emerald-500/20",
+      badge: "bg-emerald-500",
+    },
+    default: {
+      border: "border-gray-700",
+      bg: "bg-gray-800/60",
+      text: "text-white",
+      line: "from-gray-500/70",
+      glow: "",
+      badge: "bg-gray-500",
+    },
+  }[variant];
+
+  // Fonction pour calculer les informations du premier match avec progression
+  const calculateFirstGameInfo = () => {
+    if (variant !== "upcoming" || !games || games.length === 0) {
+      return null;
+    }
+
+    const firstGame = games[0];
+    const gameTime = firstGame.startTimeUTC
+      ? moment(firstGame.startTimeUTC).tz("America/Toronto")
+      : null;
+
+    if (!gameTime) return null;
+
+    const now = moment().tz("America/Toronto");
+    const diffSeconds = gameTime.diff(now, 'seconds');
+
+    if (diffSeconds <= 0) return { time: gameTime.format("HH:mm"), remaining: "Commencé", progress: 100 };
+
+    const hours = Math.floor(diffSeconds / 3600);
+    const minutes = Math.floor((diffSeconds % 3600) / 60);
+    const seconds = diffSeconds % 60;
+
+    // Calcul de la progression (sur 2 heures avant le match = 7200 secondes)
+    const totalSecondsBeforeMatch = 7200; // 2 heures en secondes
+    const elapsedSeconds = Math.max(0, totalSecondsBeforeMatch - diffSeconds);
+    const progress = Math.min(100, Math.max(0, (elapsedSeconds / totalSecondsBeforeMatch) * 100));
+
+    let remainingText = "";
+    if (hours > 0) {
+      remainingText = `${hours}h ${minutes}min`;
+    } else if (minutes > 0) {
+      remainingText = `${minutes}min ${seconds}s`;
+    } else {
+      remainingText = `${seconds}s`;
+    }
+
+    return {
+      time: gameTime.format("HH:mm"),
+      remaining: remainingText,
+      progress: progress
+    };
+  };
+
+  // Mise à jour du timer dynamique
+  useEffect(() => {
+    if (variant !== "upcoming") return;
+
+    const timer = setTimeout(() => {
+      setFirstGameInfo(calculateFirstGameInfo());
+    }, 0);
+
+    const interval = setInterval(() => {
+      setFirstGameInfo(calculateFirstGameInfo());
+    }, 1000);
+
+    return () => {
+      clearTimeout(timer);
+      clearInterval(interval);
+    };
+  }, [variant, games]);
+
+  return (
+    <div className="mt-10 mb-6">
+      {/* Ligne supérieure avec le badge principal */}
+      <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+        {/* Badge principal avec effet glassmorphisme */}
+        <div
+          className={`relative flex items-center gap-3 rounded-2xl border ${styles.border} ${styles.bg} px-5 py-3.5 shadow-xl ${styles.glow} backdrop-blur-sm overflow-hidden group`}
+        >
+          {/* Animation de fond au hover */}
+          <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/5 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
+          
+          {/* Icône animée */}
+          <div className={`text-3xl transform transition-transform group-hover:scale-110 group-hover:rotate-12 duration-300`}>
+            {icon}
+          </div>
+
+          <div>
+            <h2 className={`text-2xl md:text-3xl font-black tracking-tight ${styles.text}`}>
+              {title}
+            </h2>
+            <div className="flex items-center gap-2 mt-0.5">
+              <div className={`w-2 h-2 rounded-full ${styles.badge} animate-pulse`} />
+              <p className="text-sm font-medium text-gray-300">
+                {count} match{count > 1 ? "s" : ""} au programme
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Ligne décorative avec étoiles */}
+        <div className={`hidden sm:flex items-center gap-2 flex-1`}>
+          <div className={`h-px flex-1 bg-gradient-to-r ${styles.line} to-transparent`} />
+          <div className="flex gap-1">
+            {[...Array(3)].map((_, i) => (
+              <div
+                key={i}
+                className={`w-1 h-1 rounded-full ${styles.text.replace('text-', 'bg-')} opacity-40`}
+              />
+            ))}
+          </div>
+        </div>
+
+        {/* Call to action pour upcoming */}
+        {variant === "upcoming" && count > 0 && (
+          <div className="hidden lg:block">
+            <div className="flex items-center gap-2 text-xs text-gray-400 bg-gray-800/30 rounded-full px-3 py-1.5">
+              <span>🔔</span>
+              <span>Ne ratez aucun but! 🏒</span>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Timer détaillé pour upcoming avec barre de progression */}
+      {variant === "upcoming" && firstGameInfo && firstGameInfo.remaining !== "Commencé" && (
+        <div className="mt-4">
+          {/* Compteur centré */}
+          <div className="flex justify-center mb-3">
+            <div className="flex items-center gap-4 bg-black/30 rounded-full px-5 py-2 backdrop-blur-sm">
+              <div className="flex items-center gap-3">
+                <div className="text-center">
+                  <div className="text-sm text-gray-400 uppercase tracking-wider">Premier match</div>
+                  <div className="text-2xl font-black text-blue-400 font-mono">
+                    {firstGameInfo.time}
+                  </div>
+                </div>
+                <div className="text-yellow-400 text-2xl animate-pulse">⚡</div>
+                <div className="text-center">
+                  <div className="text-sm text-gray-400 uppercase tracking-wider">Dans</div>
+                  <div className="text-2xl font-black text-yellow-400 font-mono">
+                    {firstGameInfo.remaining}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Barre de progression stylisée */}
+          {/* <div className="mt-2">
+            <div className="h-1.5 bg-blue-950/50 rounded-full overflow-hidden">
+              <div 
+                className="h-full bg-gradient-to-r from-blue-500 to-blue-400 rounded-full transition-all duration-1000 ease-out relative"
+                style={{ width: `${firstGameInfo.progress}%` }}
+              > */}
+                {/* Effet de brillance sur la barre */}
+                {/* <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer" />
+              </div>
+            </div> */}
+            {/* Indicateurs de temps sous la barre */}
+            {/* <div className="flex justify-between mt-1 text-[10px] text-gray-600 px-1">
+              <span>H-2h</span>
+              <span>⚡ Premier match</span>
+              <span>Maintenant</span>
+            </div>
+          </div> */}
+        </div>
+      )}
+
+      {/* Sous-titre descriptif pour upcoming */}
+      {variant === "upcoming" && count > 0 && (
+        <div className="mt-3">
+          <p className="text-xs text-gray-500 flex items-center gap-2 justify-center">
+            <span className="w-1 h-1 rounded-full bg-blue-500" />
+            <span>Tous les horaires en HE</span>
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
+
 
 // Version alternative corrigée pour UpcomingSectionTitle
 // function UpcomingSectionTitle({ count, games }: { count: number; games?: Game[] }) {
