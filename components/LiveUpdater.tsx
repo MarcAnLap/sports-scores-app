@@ -588,7 +588,7 @@ function SectionTitle({
               <div className="flex items-center gap-1.5 bg-black/30 rounded-full px-3 py-1.5">
                 <span className="text-yellow-400 text-sm animate-pulse">⚡</span>
                 <span className="text-xs font-mono font-bold text-yellow-400">
-                  dans {timeUntilFirstGame}
+                  dans moins de {timeUntilFirstGame}
                 </span>
               </div>
             </div>
@@ -631,6 +631,228 @@ function SectionTitle({
     </div>
   );
 }
+
+// function SectionTitle({
+//   title,
+//   count,
+//   icon,
+//   variant = "default",
+//   games,
+// }: {
+//   title: string;
+//   count: number;
+//   icon: string;
+//   variant?: "live" | "upcoming" | "recent" | "default";
+//   games?: Game[];
+// }) {
+//   const [firstGameInfo, setFirstGameInfo] = useState<{ time: string; remaining: string; progress: number } | null>(null);
+
+//   const styles = {
+//     live: {
+//       border: "border-red-500/30",
+//       bg: "bg-red-500/10",
+//       text: "text-red-400",
+//       line: "from-red-500/70",
+//       glow: "shadow-red-500/20",
+//       badge: "bg-red-500",
+//     },
+//     upcoming: {
+//       border: "border-blue-500/30",
+//       bg: "bg-blue-500/10",
+//       text: "text-blue-400",
+//       line: "from-blue-500/70",
+//       glow: "shadow-blue-500/20",
+//       badge: "bg-blue-500",
+//     },
+//     recent: {
+//       border: "border-emerald-500/30",
+//       bg: "bg-emerald-500/10",
+//       text: "text-emerald-400",
+//       line: "from-emerald-500/70",
+//       glow: "shadow-emerald-500/20",
+//       badge: "bg-emerald-500",
+//     },
+//     default: {
+//       border: "border-gray-700",
+//       bg: "bg-gray-800/60",
+//       text: "text-white",
+//       line: "from-gray-500/70",
+//       glow: "",
+//       badge: "bg-gray-500",
+//     },
+//   }[variant];
+
+//   // Fonction pour calculer les informations du premier match avec progression
+//   const calculateFirstGameInfo = () => {
+//     if (variant !== "upcoming" || !games || games.length === 0) {
+//       return null;
+//     }
+
+//     const firstGame = games[0];
+//     const gameTime = firstGame.startTimeUTC
+//       ? moment(firstGame.startTimeUTC).tz("America/Toronto")
+//       : null;
+
+//     if (!gameTime) return null;
+
+//     const now = moment().tz("America/Toronto");
+//     const diffSeconds = gameTime.diff(now, 'seconds');
+
+//     if (diffSeconds <= 0) return { time: gameTime.format("HH:mm"), remaining: "Commencé", progress: 100 };
+
+//     const hours = Math.floor(diffSeconds / 3600);
+//     const minutes = Math.floor((diffSeconds % 3600) / 60);
+//     const seconds = diffSeconds % 60;
+
+//     // Calcul de la progression (sur 2 heures avant le match = 7200 secondes)
+//     const totalSecondsBeforeMatch = 7200; // 2 heures en secondes
+//     const elapsedSeconds = Math.max(0, totalSecondsBeforeMatch - diffSeconds);
+//     const progress = Math.min(100, Math.max(0, (elapsedSeconds / totalSecondsBeforeMatch) * 100));
+
+//     let remainingText = "";
+//     if (hours > 0) {
+//       remainingText = `${hours}h ${minutes}min`;
+//     } else if (minutes > 0) {
+//       remainingText = `${minutes}min ${seconds}s`;
+//     } else {
+//       remainingText = `${seconds}s`;
+//     }
+
+//     return {
+//       time: gameTime.format("HH:mm"),
+//       remaining: remainingText,
+//       progress: progress
+//     };
+//   };
+
+//   // Mise à jour du timer dynamique
+//   useEffect(() => {
+//     if (variant !== "upcoming") return;
+
+//     const timer = setTimeout(() => {
+//       setFirstGameInfo(calculateFirstGameInfo());
+//     }, 0);
+
+//     const interval = setInterval(() => {
+//       setFirstGameInfo(calculateFirstGameInfo());
+//     }, 1000);
+
+//     return () => {
+//       clearTimeout(timer);
+//       clearInterval(interval);
+//     };
+//   }, [variant, games]);
+
+//   return (
+//     <div className="mt-10 mb-6">
+//       {/* Ligne supérieure avec le badge principal */}
+//       <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+//         {/* Badge principal avec effet glassmorphisme */}
+//         <div
+//           className={`relative flex items-center gap-3 rounded-2xl border ${styles.border} ${styles.bg} px-5 py-3.5 shadow-xl ${styles.glow} backdrop-blur-sm overflow-hidden group`}
+//         >
+//           {/* Animation de fond au hover */}
+//           <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/5 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
+          
+//           {/* Icône animée */}
+//           <div className={`text-3xl transform transition-transform group-hover:scale-110 group-hover:rotate-12 duration-300`}>
+//             {icon}
+//           </div>
+
+//           <div>
+//             <h2 className={`text-2xl md:text-3xl font-black tracking-tight ${styles.text}`}>
+//               {title}
+//             </h2>
+//             <div className="flex items-center gap-2 mt-0.5">
+//               <div className={`w-2 h-2 rounded-full ${styles.badge} animate-pulse`} />
+//               <p className="text-sm font-medium text-gray-300">
+//                 {count} match{count > 1 ? "s" : ""} au programme
+//               </p>
+//             </div>
+//           </div>
+//         </div>
+
+//         {/* Ligne décorative avec étoiles */}
+//         <div className={`hidden sm:flex items-center gap-2 flex-1`}>
+//           <div className={`h-px flex-1 bg-gradient-to-r ${styles.line} to-transparent`} />
+//           <div className="flex gap-1">
+//             {[...Array(3)].map((_, i) => (
+//               <div
+//                 key={i}
+//                 className={`w-1 h-1 rounded-full ${styles.text.replace('text-', 'bg-')} opacity-40`}
+//               />
+//             ))}
+//           </div>
+//         </div>
+
+//         {/* Call to action pour upcoming */}
+//         {variant === "upcoming" && count > 0 && (
+//           <div className="hidden lg:block">
+//             <div className="flex items-center gap-2 text-xs text-gray-400 bg-gray-800/30 rounded-full px-3 py-1.5">
+//               <span>🔔</span>
+//               <span>Ne ratez aucun but! 🏒</span>
+//             </div>
+//           </div>
+//         )}
+//       </div>
+
+//       {/* Timer détaillé pour upcoming avec barre de progression */}
+//       {variant === "upcoming" && firstGameInfo && firstGameInfo.remaining !== "Commencé" && (
+//         <div className="mt-4">
+//           {/* Compteur centré */}
+//           <div className="flex justify-center mb-3">
+//             <div className="flex items-center gap-4 bg-black/30 rounded-full px-5 py-2 backdrop-blur-sm">
+//               <div className="flex items-center gap-3">
+//                 <div className="text-center">
+//                   <div className="text-sm text-gray-400 uppercase tracking-wider">Premier match</div>
+//                   <div className="text-2xl font-black text-blue-400 font-mono">
+//                     {firstGameInfo.time}
+//                   </div>
+//                 </div>
+//                 <div className="text-yellow-400 text-2xl animate-pulse">⚡</div>
+//                 <div className="text-center">
+//                   <div className="text-sm text-gray-400 uppercase tracking-wider">Dans</div>
+//                   <div className="text-2xl font-black text-yellow-400 font-mono">
+//                     {firstGameInfo.remaining}
+//                   </div>
+//                 </div>
+//               </div>
+//             </div>
+//           </div>
+
+//           {/* Barre de progression stylisée */}
+//           {/* <div className="mt-2">
+//             <div className="h-1.5 bg-blue-950/50 rounded-full overflow-hidden">
+//               <div 
+//                 className="h-full bg-gradient-to-r from-blue-500 to-blue-400 rounded-full transition-all duration-1000 ease-out relative"
+//                 style={{ width: `${firstGameInfo.progress}%` }}
+//               > */}
+//                 {/* Effet de brillance sur la barre */}
+//                 {/* <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer" />
+//               </div>
+//             </div> */}
+//             {/* Indicateurs de temps sous la barre */}
+//             {/* <div className="flex justify-between mt-1 text-[10px] text-gray-600 px-1">
+//               <span>H-2h</span>
+//               <span>⚡ Premier match</span>
+//               <span>Maintenant</span>
+//             </div>
+//           </div> */}
+//         </div>
+//       )}
+
+//       {/* Sous-titre descriptif pour upcoming */}
+//       {variant === "upcoming" && count > 0 && (
+//         <div className="mt-3">
+//           <p className="text-xs text-gray-500 flex items-center gap-2 justify-center">
+//             <span className="w-1 h-1 rounded-full bg-blue-500" />
+//             <span>Tous les horaires en HE</span>
+//           </p>
+//         </div>
+//       )}
+//     </div>
+//   );
+// }
 
 // Version alternative corrigée pour UpcomingSectionTitle
 // function UpcomingSectionTitle({ count, games }: { count: number; games?: Game[] }) {
