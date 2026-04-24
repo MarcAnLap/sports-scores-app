@@ -820,7 +820,7 @@ function SectionTitle({
   }, [variant, games]);
 
   return (
-    <div className="mt-10 mb-6">
+    <div className="mt-6 mb-8">
       {/* Ligne supérieure avec le badge principal */}
       <div className="flex flex-col sm:flex-row sm:items-center gap-4">
         {/* Badge principal avec effet glassmorphisme */}
