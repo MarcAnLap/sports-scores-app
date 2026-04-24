@@ -557,7 +557,7 @@ function SectionTitle({
   const showTimer = variant === "upcoming" && timeUntilFirstGame && timeUntilFirstGame !== "Commencé";
 
   return (
-    <div className="mt-10 mb-6">
+    <div className="mt-4 mb-6">
       <div className="flex flex-col sm:flex-row sm:items-center gap-4">
         {/* Badge principal avec effet glassmorphisme */}
         <div

@@ -51,7 +51,8 @@ export const metadata = {
 
 export default function Home() {
   return (
-    <main className="min-h-screen bg-black text-white max-w-3xl mx-auto">
+    // <main className="min-h-screen bg-black text-white max-w-3xl mx-auto">
+    <main className="min-h-screen bg-black text-white max-w-full mx-auto">
       <ScoreBoard />
     </main>
   );
