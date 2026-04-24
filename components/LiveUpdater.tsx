@@ -525,7 +525,8 @@ function SectionTitle({
     const seconds = diffSeconds % 60;
 
     if (hours > 0) {
-      return `${hours}h ${minutes}min`;
+      // return `${hours}h ${minutes}min`;
+      return `${hours}h`;
     } else if (minutes > 0) {
       return `${minutes}min ${seconds}s`;
     } else {
