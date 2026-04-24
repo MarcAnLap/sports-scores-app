@@ -897,23 +897,23 @@ function SectionTitle({
           </div>
 
           {/* Barre de progression stylisée */}
-          {/* <div className="mt-2">
+          <div className="mt-2">
             <div className="h-1.5 bg-blue-950/50 rounded-full overflow-hidden">
               <div 
                 className="h-full bg-gradient-to-r from-blue-500 to-blue-400 rounded-full transition-all duration-1000 ease-out relative"
                 style={{ width: `${firstGameInfo.progress}%` }}
-              > */}
+              >
                 {/* Effet de brillance sur la barre */}
-                {/* <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer" />
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer" />
               </div>
-            </div> */}
+            </div>
             {/* Indicateurs de temps sous la barre */}
-            {/* <div className="flex justify-between mt-1 text-[10px] text-gray-600 px-1">
+            <div className="flex justify-between mt-1 text-[10px] text-gray-600 px-1">
               <span>H-2h</span>
               <span>⚡ Premier match</span>
               <span>Maintenant</span>
             </div>
-          </div> */}
+          </div>
         </div>
       )}
 
