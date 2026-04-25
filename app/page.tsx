@@ -1,4 +1,5 @@
 import ScoreBoard from "../components/ScoreBoard";
+import Script from "next/script";
 
 export const metadata = {
   title: "Scores NHL en direct | Résultats hockey en temps réel",
