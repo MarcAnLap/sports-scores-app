@@ -711,8 +711,57 @@ function getGameStatus(game: Game) {
 //   );
 // }
 
+// function isIntermission(game: Game) {
+//   return game.clock?.inIntermission === true || game.clock?.running === false;
+// }
+
+// function getPeriodLabel(game: Game): string | null {
+//   if (!ACTIVE_LIVE_STATES.includes(game.gameState)) return null;
+
+//   const period = game.period ?? 0;
+//   const isPlayoff = game.gameType === 3;
+
+//   if (isIntermission(game)) {
+//     if (period >= 4 && isPlayoff) return `Fin prolongation ${period - 3}`;
+//     if (period >= 4) return "Fin de la prolongation";
+//     return `Fin de la période ${period}`;
+//   }
+
+//   if (period <= 3) return `Période ${period}`;
+
+//   if (isPlayoff) return `Prolongation ${period - 3}`;
+
+//   if (period === 4) return "Prolongation";
+
+//   return "Tirs de barrage";
+// }
+
+// function getClockDisplay(game: Game): string | null {
+//   if (!ACTIVE_LIVE_STATES.includes(game.gameState)) return null;
+
+//   const period = game.period ?? 0;
+
+//   if (isIntermission(game)) {
+//     if (period === 3 && game.awayTeam.score === game.homeTeam.score) {
+//       return "Pause avant prolongation";
+//     }
+
+//     return "Entr’acte";
+//   }
+
+//   return game.clock?.timeRemaining || "En cours";
+// }
+
 function isIntermission(game: Game) {
-  return game.clock?.inIntermission === true || game.clock?.running === false;
+  const timeRemaining = game.clock?.timeRemaining?.trim() ?? "";
+
+  if (game.clock?.inIntermission === true) return true;
+
+  // vraie fin de période
+  if (timeRemaining === "00:00") return true;
+
+  // running false = souvent arrêt de jeu, pas entracte
+  return false;
 }
 
 function getPeriodLabel(game: Game): string | null {
@@ -728,9 +777,7 @@ function getPeriodLabel(game: Game): string | null {
   }
 
   if (period <= 3) return `Période ${period}`;
-
   if (isPlayoff) return `Prolongation ${period - 3}`;
-
   if (period === 4) return "Prolongation";
 
   return "Tirs de barrage";
@@ -739,6 +786,7 @@ function getPeriodLabel(game: Game): string | null {
 function getClockDisplay(game: Game): string | null {
   if (!ACTIVE_LIVE_STATES.includes(game.gameState)) return null;
 
+  const timeRemaining = game.clock?.timeRemaining?.trim() ?? "";
   const period = game.period ?? 0;
 
   if (isIntermission(game)) {
@@ -749,7 +797,7 @@ function getClockDisplay(game: Game): string | null {
     return "Entr’acte";
   }
 
-  return game.clock?.timeRemaining || "En cours";
+  return timeRemaining || "En cours";
 }
 
 function SectionTitle({
@@ -1148,12 +1196,12 @@ function SectionTitle({
 
 function GameCard({ game }: { game: Game }) {
   
-  console.log("CLOCK DEBUG", {
-  game: `${game.awayTeam.abbrev} vs ${game.homeTeam.abbrev}`,
-  period: game.period,
-  clock: game.clock,
-  gameState: game.gameState,
-});
+//   console.log("CLOCK DEBUG", {
+//   game: `${game.awayTeam.abbrev} vs ${game.homeTeam.abbrev}`,
+//   period: game.period,
+//   clock: game.clock,
+//   gameState: game.gameState,
+// });
 
   const status = getGameStatus(game);
   const isLive = ACTIVE_LIVE_STATES.includes(game.gameState);
@@ -1322,7 +1370,7 @@ export default function LiveUpdater({
 
     const data = await res.json();
 
-    console.log("DEBUG NHL API:", data.debug);
+    // console.log("DEBUG NHL API:", data.debug);
 
     return {
       scheduleGames: data.scheduleGames || [],
@@ -1418,18 +1466,18 @@ export default function LiveUpdater({
 
   const mergedGames = Array.from(mergedById.values());
 
-  console.log(
-    "MERGED STATES:",
-    mergedGames.map((g) => ({
-      id: g.id,
-      away: g.awayTeam.abbrev,
-      home: g.homeTeam.abbrev,
-      state: g.gameState,
-      localDate: g.startTimeUTC
-        ? moment(g.startTimeUTC).tz("America/Toronto").format("YYYY-MM-DD HH:mm")
-        : null,
-    }))
-  );
+  // console.log(
+  //   "MERGED STATES:",
+  //   mergedGames.map((g) => ({
+  //     id: g.id,
+  //     away: g.awayTeam.abbrev,
+  //     home: g.homeTeam.abbrev,
+  //     state: g.gameState,
+  //     localDate: g.startTimeUTC
+  //       ? moment(g.startTimeUTC).tz("America/Toronto").format("YYYY-MM-DD HH:mm")
+  //       : null,
+  //   }))
+  // );
 
   const liveGames = mergedGames
     .filter((game) => ACTIVE_LIVE_STATES.includes(game.gameState))
