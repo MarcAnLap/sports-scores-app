@@ -300,6 +300,9 @@ type Game = {
   period?: number;
   clock?: {
     timeRemaining?: string;
+    secondsRemaining?: number;
+  running?: boolean;
+  inIntermission?: boolean;
   };
   homeTeam: {
     abbrev: string;
@@ -479,52 +482,52 @@ function getGameStatus(game: Game) {
   return { label: game.gameState, color: "text-gray-500", icon: "⏸" };
 }
 
-function getPeriodLabel(game: Game): string | null {
-  if (!ACTIVE_LIVE_STATES.includes(game.gameState)) return null;
+// function getPeriodLabel(game: Game): string | null {
+//   if (!ACTIVE_LIVE_STATES.includes(game.gameState)) return null;
 
-  const period = game.period ?? 0;
-  const timeRemaining = game.clock?.timeRemaining?.trim() ?? "";
-  const isPlayoff = game.gameType === 3;
+//   const period = game.period ?? 0;
+//   const timeRemaining = game.clock?.timeRemaining?.trim() ?? "";
+//   const isPlayoff = game.gameType === 3;
 
-  if (period <= 3) {
-    if (timeRemaining === "00:00") {
-      return `Fin de la période ${period}`;
-    }
+//   if (period <= 3) {
+//     if (timeRemaining === "00:00") {
+//       return `Fin de la période ${period}`;
+//     }
 
-    return `Période ${period}`;
-  }
+//     return `Période ${period}`;
+//   }
 
-  if (isPlayoff) {
-    if (timeRemaining === "00:00") {
-      return `Fin prolongation ${period - 3}`;
-    }
+//   if (isPlayoff) {
+//     if (timeRemaining === "00:00") {
+//       return `Fin prolongation ${period - 3}`;
+//     }
 
-    return `Prolongation ${period - 3}`;
-  }
+//     return `Prolongation ${period - 3}`;
+//   }
 
-  if (period === 4) {
-    if (timeRemaining === "00:00") return "Fin de la prolongation";
-    return "Prolongation";
-  }
+//   if (period === 4) {
+//     if (timeRemaining === "00:00") return "Fin de la prolongation";
+//     return "Prolongation";
+//   }
 
-  return "Tirs de barrage";
-}
+//   return "Tirs de barrage";
+// }
 
-function getClockDisplay(game: Game): string | null {
-  if (!ACTIVE_LIVE_STATES.includes(game.gameState)) return null;
+// function getClockDisplay(game: Game): string | null {
+//   if (!ACTIVE_LIVE_STATES.includes(game.gameState)) return null;
 
-  const period = game.period ?? 0;
-  const timeRemaining = game.clock?.timeRemaining?.trim() ?? "";
+//   const period = game.period ?? 0;
+//   const timeRemaining = game.clock?.timeRemaining?.trim() ?? "";
 
-  if (!timeRemaining) return "En cours";
+//   if (!timeRemaining) return "En cours";
 
-  if (timeRemaining === "00:00") {
-    if (period >= 4) return "Pause OT";
-    return "Pause / entracte";
-  }
+//   if (timeRemaining === "00:00") {
+//     if (period >= 4) return "Pause OT";
+//     return "Pause / entracte";
+//   }
 
-  return timeRemaining;
-}
+//   return timeRemaining;
+// }
 
 //section title plus stylé et varianté
 // function SectionTitle({
@@ -707,6 +710,47 @@ function getClockDisplay(game: Game): string | null {
 //     </div>
 //   );
 // }
+
+function isIntermission(game: Game) {
+  return game.clock?.inIntermission === true || game.clock?.running === false;
+}
+
+function getPeriodLabel(game: Game): string | null {
+  if (!ACTIVE_LIVE_STATES.includes(game.gameState)) return null;
+
+  const period = game.period ?? 0;
+  const isPlayoff = game.gameType === 3;
+
+  if (isIntermission(game)) {
+    if (period >= 4 && isPlayoff) return `Fin prolongation ${period - 3}`;
+    if (period >= 4) return "Fin de la prolongation";
+    return `Fin de la période ${period}`;
+  }
+
+  if (period <= 3) return `Période ${period}`;
+
+  if (isPlayoff) return `Prolongation ${period - 3}`;
+
+  if (period === 4) return "Prolongation";
+
+  return "Tirs de barrage";
+}
+
+function getClockDisplay(game: Game): string | null {
+  if (!ACTIVE_LIVE_STATES.includes(game.gameState)) return null;
+
+  const period = game.period ?? 0;
+
+  if (isIntermission(game)) {
+    if (period === 3 && game.awayTeam.score === game.homeTeam.score) {
+      return "Pause avant prolongation";
+    }
+
+    return "Entr’acte";
+  }
+
+  return game.clock?.timeRemaining || "En cours";
+}
 
 function SectionTitle({
   title,
@@ -1103,6 +1147,14 @@ function SectionTitle({
 // }
 
 function GameCard({ game }: { game: Game }) {
+  
+  console.log("CLOCK DEBUG", {
+  game: `${game.awayTeam.abbrev} vs ${game.homeTeam.abbrev}`,
+  period: game.period,
+  clock: game.clock,
+  gameState: game.gameState,
+});
+
   const status = getGameStatus(game);
   const isLive = ACTIVE_LIVE_STATES.includes(game.gameState);
   const isFinished = FINISHED_STATES.includes(game.gameState);
