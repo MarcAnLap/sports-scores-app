@@ -1,7 +1,7 @@
 // components/LiveUpdater.tsx
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import moment from "moment-timezone";
 import Banner300x250 from "./Banner300x250";
 // En haut du fichier LiveUpdater.tsx, ajoute :
@@ -83,6 +83,7 @@ const teamEmojis: Record<string, string> = {
   BOS: "🟡⚫",
   OTT: "🔴⚫",
   TB: "🔵⚪",
+  TBL: "🔵⚪",
   FLA: "🔴🔵",
   DET: "🔴⚪",
   BUF: "🔵🟡",
@@ -537,43 +538,7 @@ function SectionTitle({
 }) {
   const [firstGameInfo, setFirstGameInfo] = useState<{ time: string; remaining: string; progress: number } | null>(null);
 
-  const styles = {
-    live: {
-      border: "border-red-500/30",
-      bg: "bg-red-500/10",
-      text: "text-red-400",
-      line: "from-red-500/70",
-      glow: "shadow-red-500/20",
-      badge: "bg-red-500",
-    },
-    upcoming: {
-      border: "border-blue-500/30",
-      bg: "bg-blue-500/10",
-      text: "text-blue-400",
-      line: "from-blue-500/70",
-      glow: "shadow-blue-500/20",
-      badge: "bg-blue-500",
-    },
-    recent: {
-      border: "border-emerald-500/30",
-      bg: "bg-emerald-500/10",
-      text: "text-emerald-400",
-      line: "from-emerald-500/70",
-      glow: "shadow-emerald-500/20",
-      badge: "bg-emerald-500",
-    },
-    default: {
-      border: "border-gray-700",
-      bg: "bg-gray-800/60",
-      text: "text-white",
-      line: "from-gray-500/70",
-      glow: "",
-      badge: "bg-gray-500",
-    },
-  }[variant];
-
-  // Fonction pour calculer les informations du premier match avec progression
-  const calculateFirstGameInfo = () => {
+  const calculateFirstGameInfo = useCallback(() => {
     if (variant !== "upcoming" || !games || games.length === 0) {
       return null;
     }
@@ -613,7 +578,43 @@ function SectionTitle({
       remaining: remainingText,
       progress: progress
     };
-  };
+  }, [games, variant]);
+
+  const styles = {
+    live: {
+      border: "border-red-500/30",
+      bg: "bg-red-500/10",
+      text: "text-red-400",
+      line: "from-red-500/70",
+      glow: "shadow-red-500/20",
+      badge: "bg-red-500",
+    },
+    upcoming: {
+      border: "border-blue-500/30",
+      bg: "bg-blue-500/10",
+      text: "text-blue-400",
+      line: "from-blue-500/70",
+      glow: "shadow-blue-500/20",
+      badge: "bg-blue-500",
+    },
+    recent: {
+      border: "border-emerald-500/30",
+      bg: "bg-emerald-500/10",
+      text: "text-emerald-400",
+      line: "from-emerald-500/70",
+      glow: "shadow-emerald-500/20",
+      badge: "bg-emerald-500",
+    },
+    default: {
+      border: "border-gray-700",
+      bg: "bg-gray-800/60",
+      text: "text-white",
+      line: "from-gray-500/70",
+      glow: "",
+      badge: "bg-gray-500",
+    },
+  }[variant];
+
 
   // Mise à jour du timer dynamique
   useEffect(() => {
@@ -631,7 +632,7 @@ function SectionTitle({
       clearTimeout(timer);
       clearInterval(interval);
     };
-  }, [variant, games]);
+  }, [calculateFirstGameInfo, variant]);
 
   return (
     <div className="mt-6 mb-8">
@@ -642,7 +643,7 @@ function SectionTitle({
           className={`relative flex items-center gap-3 rounded-2xl border ${styles.border} ${styles.bg} px-5 py-3.5 shadow-xl ${styles.glow} backdrop-blur-sm overflow-hidden group`}
         >
           {/* Animation de fond au hover */}
-          <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/5 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
+          <div className="absolute inset-0 bg-linear-to-r from-white/0 via-white/5 to-white/0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
           
           {/* Icône animée */}
           <div className={`text-3xl transform transition-transform group-hover:scale-110 group-hover:rotate-12 duration-300`}>
@@ -664,7 +665,7 @@ function SectionTitle({
 
         {/* Ligne décorative avec étoiles */}
         <div className={`hidden sm:flex items-center gap-2 flex-1`}>
-          <div className={`h-px flex-1 bg-gradient-to-r ${styles.line} to-transparent`} />
+          <div className={`h-px flex-1 bg-linear-to-r ${styles.line} to-transparent`} />
           <div className="flex gap-1">
             {[...Array(3)].map((_, i) => (
               <div
@@ -714,11 +715,11 @@ function SectionTitle({
           <div className="mt-2">
             <div className="h-1.5 bg-blue-950/50 rounded-full overflow-hidden">
               <div 
-                className="h-full bg-gradient-to-r from-blue-500 to-blue-400 rounded-full transition-all duration-1000 ease-out relative"
+                className="h-full bg-linear-to-r from-blue-500 to-blue-400 rounded-full transition-all duration-1000 ease-out relative"
                 style={{ width: `${firstGameInfo.progress}%` }}
               >
                 {/* Effet de brillance sur la barre */}
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer" />
+                <div className="absolute inset-0 bg-linear-to-r from-transparent via-white/20 to-transparent animate-shimmer" />
               </div>
             </div>
             {/* Indicateurs de temps sous la barre */}
@@ -970,9 +971,9 @@ function GameCard({ game, standingsMap}: {
 
   return (
     <div className="group relative bg-gray-800/50 backdrop-blur-sm rounded-2xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-[1.02]">
-      <div className="absolute inset-0 bg-gradient-to-r from-white/5 to-transparent pointer-events-none" />
+      <div className="absolute inset-0 bg-linear-to-r from-white/5 to-transparent pointer-events-none" />
       {isLive && (
-        <div className="absolute inset-0 bg-gradient-to-r from-red-500/5 to-transparent pointer-events-none animate-pulse" />
+        <div className="absolute inset-0 bg-linear-to-r from-red-500/5 to-transparent pointer-events-none animate-pulse" />
       )}
 
       <div className="relative p-4 md:p-6">
