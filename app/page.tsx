@@ -3,9 +3,9 @@ import Link from "next/link";
 
 
 export const metadata = {
-  title: "Scores NHL en direct | Résultats hockey en temps réel",
+  title: "Scores NHL en direct | Découvrez aussi NBA et MLB sur Fan de Sport",
   description:
-    "Suivez les scores NHL en direct, les résultats des matchs, les rencontres en cours et les mises à jour en temps réel au Canada.",
+    "Consultez les scores NHL en direct. Découvrez également Fan de Sport pour suivre les scores NBA, MLB et les résultats sportifs en temps réel.",
   keywords: [
     "NHL scores en direct",
     "résultats NHL",
@@ -14,7 +14,7 @@ export const metadata = {
     "NHL Canada",
   ],
   openGraph: {
-    title: "Scores NHL en direct",
+    title: "Scores NHL en direct | Découvrez aussi NBA et MLB sur Fan de Sport",
     description:
       "Tous les matchs NHL en direct avec mises à jour rapides et fiables.",
     type: "website",
@@ -31,7 +31,7 @@ export const metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Scores NHL en direct",
+    title: "Scores NHL en direct | Découvrez aussi NBA et MLB sur Fan de Sport",
     description: "Tous les matchs NHL en direct avec mises à jour rapides et fiables.",
     images: [
       "https://images.unsplash.com/photo-1516226415502-d6624544376b?q=80&w=1139&auto=format&fit=crop",
