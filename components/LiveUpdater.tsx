@@ -3,7 +3,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import moment from "moment-timezone";
-import Banner300x250 from "./Banner300x250";
+// import Banner300x250 from "./Banner300x250";
 // En haut du fichier LiveUpdater.tsx, ajoute :
 import { 
   createStandingsMap, 
@@ -1426,13 +1426,13 @@ export default function LiveUpdater({
         </div>
       )}
 
-      <Banner300x250
+      {/* <Banner300x250
         id="ad-bottom"
         width={300}
         height={250}
         format="iframe"
         className="my-4"
-      />
+      /> */}
     </div>
   );
 }

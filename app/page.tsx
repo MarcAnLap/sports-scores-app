@@ -1,5 +1,6 @@
 import ScoreBoard from "../components/ScoreBoard";
 import Link from "next/link";
+import Banner300x250 from "../components/Banner300x250";
 
 
 export const metadata = {
@@ -130,6 +131,14 @@ export default function Home() {
           Voir les scores en direct →
         </Link> */}
       </div>
+
+      <Banner300x250
+        id="ad-bottom"
+        width={300}
+        height={250}
+        format="iframe"
+        className="my-4"
+      />
       <ScoreBoard />
     </main>
   );
